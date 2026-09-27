@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Wallet,
   Plus,
-  ArrowDownRight,
-  ArrowUpRight,
   CreditCard,
   PieChart,
-  DollarSign,
   AlertTriangle,
   TrendingUp,
-  CheckCircle2,
-  Calendar
+  PiggyBank,
+  ArrowRight,
+  DollarSign
 } from 'lucide-react';
 import { useHubWork } from '../../context/HubWorkContext';
 
@@ -26,8 +24,20 @@ export const FinanceView: React.FC = () => {
     monthlyIncome,
     monthlyExpenses,
     toggleBillPaid,
+    depositToSavingsGoal,
     openQuickActionWithTab
   } = useHubWork();
+
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [depositAmount, setDepositAmount] = useState('250');
+  const [depositAccountId, setDepositAccountId] = useState(accounts[0]?.id || 'acc-1');
+
+  const netCashFlow = monthlyIncome - monthlyExpenses;
+
+  const handleDepositSubmit = (goalId: string) => {
+    depositToSavingsGoal(goalId, parseFloat(depositAmount) || 100, depositAccountId);
+    setSelectedGoalId(null);
+  };
 
   return (
     <div className="p-4 lg:p-8 space-y-8 max-w-7xl mx-auto pb-24">
@@ -39,7 +49,7 @@ export const FinanceView: React.FC = () => {
             <h1 className="text-2xl font-bold text-slate-100">Finance Operating Module</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Accounts, income, expenses, recurring bills, debts, bank loans, budget allocations, and savings goals.
+            Cash flow projections, 1-click savings allocation, accounts, debts, loans, and budget controls.
           </p>
         </div>
 
@@ -61,28 +71,77 @@ export const FinanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* 1. FINANCIAL DASHBOARD CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 1. FINANCIAL DASHBOARD & FORECAST CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
           <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Net Cash</span>
           <h2 className="text-2xl font-extrabold text-slate-100">${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h2>
-          <p className="text-[11px] text-emerald-400 font-medium">Across {accounts.length} active accounts</p>
+          <p className="text-[11px] text-emerald-400 font-medium">Across {accounts.length} accounts</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
           <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Monthly Income</span>
           <h2 className="text-2xl font-extrabold text-emerald-400">+${monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h2>
-          <p className="text-[11px] text-slate-400 font-medium">Retainers & freelance</p>
+          <p className="text-[11px] text-slate-400 font-medium">Active retainers</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
           <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Monthly Expenses</span>
           <h2 className="text-2xl font-extrabold text-rose-400">-${monthlyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h2>
-          <p className="text-[11px] text-slate-400 font-medium">Net cash flow: +${(monthlyIncome - monthlyExpenses).toFixed(2)}</p>
+          <p className="text-[11px] text-slate-400 font-medium">Net flow: +${netCashFlow.toFixed(2)}</p>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
+          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">90-Day Forecast</span>
+          <h2 className="text-2xl font-extrabold text-sky-400">${(totalBalance + netCashFlow * 3).toLocaleString('en-US', { minimumFractionDigits: 0 })}</h2>
+          <p className="text-[11px] text-slate-400 font-medium">Projected cumulative balance</p>
         </div>
       </div>
 
-      {/* 2. ACCOUNTS & RECURRING BILLS */}
+      {/* 2. SAVINGS GOALS ALLOCATOR */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
+            <PiggyBank className="w-5 h-5 text-emerald-400" />
+            <span>Savings Goals & Direct Allocator</span>
+          </h3>
+          <span className="text-xs text-slate-400 font-medium">Auto Contribution Ready</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {savingsGoals.map(goal => (
+            <div key={goal.id} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-200 text-sm">{goal.title}</h4>
+                  <p className="text-[11px] text-slate-400">Target: ${goal.targetAmount.toLocaleString()} • Due {goal.targetDate}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedGoalId(goal.id)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold transition-all"
+                >
+                  + Deposit
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                  <span>Progress</span>
+                  <span className="text-emerald-400 font-bold">${goal.currentAmount.toLocaleString()} ({Math.round((goal.currentAmount / goal.targetAmount) * 100)}%)</span>
+                </div>
+                <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5">
+                  <div
+                    className="bg-emerald-500 h-full rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. ACCOUNTS & UPCOMING BILLS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Accounts List */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
@@ -110,8 +169,8 @@ export const FinanceView: React.FC = () => {
         {/* Recurring Bills */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-amber-400" />
-            <span>Upcoming Bills & Payments</span>
+            <PieChart className="w-5 h-5 text-amber-400" />
+            <span>Upcoming Recurring Bills</span>
           </h3>
 
           <div className="space-y-3">
@@ -139,62 +198,55 @@ export const FinanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. DEBTS, BANK LOANS & BUDGET ALLOCATIONS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Debts & Loans */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
-            <span>Debts & Bank Loans</span>
-          </h3>
+      {/* Savings Goal Deposit Modal */}
+      {selectedGoalId && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md space-y-4">
+            <h3 className="font-bold text-slate-100 text-base">Direct Savings Deposit</h3>
+            <p className="text-xs text-slate-400">Transfer funds directly from your checking account into this savings goal.</p>
 
-          <div className="space-y-3">
-            {debts.map(debt => (
-              <div key={debt.id} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold text-slate-200 text-sm">{debt.title}</h4>
-                    <span className="text-[10px] text-slate-400">{debt.lenderOrBorrower} • {debt.type}</span>
-                  </div>
-                  <span className="font-bold text-rose-400 text-sm">${debt.remainingBalance.toLocaleString()} left</span>
-                </div>
-
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-rose-500 h-full rounded-full"
-                    style={{ width: `${((debt.totalAmount - debt.remainingBalance) / debt.totalAmount) * 100}%` }}
-                  />
-                </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Deposit Amount ($)</label>
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100"
+                />
               </div>
-            ))}
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Source Account</label>
+                <select
+                  value={depositAccountId}
+                  onChange={e => setDepositAccountId(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100"
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance.toFixed(2)})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedGoalId(null)}
+                className="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold py-2.5 rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDepositSubmit(selectedGoalId)}
+                className="w-1/2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold py-2.5 rounded-xl shadow-lg shadow-emerald-500/20"
+              >
+                Confirm Transfer
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Budgets & Savings Goals */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
-            <PieChart className="w-5 h-5 text-indigo-400" />
-            <span>Budget Categories & Progress</span>
-          </h3>
-
-          <div className="space-y-3">
-            {budgets.map(b => (
-              <div key={b.id} className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-200">{b.category}</span>
-                  <span className="text-slate-400">${b.spentAmount} / ${b.allocatedAmount}</span>
-                </div>
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${b.spentAmount > b.allocatedAmount ? 'bg-rose-500' : 'bg-sky-500'}`}
-                    style={{ width: `${Math.min(100, (b.spentAmount / b.allocatedAmount) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -7,12 +7,10 @@ import {
   LayoutList,
   Kanban,
   Clock,
-  AlertCircle,
-  ArrowRight,
-  Tag,
-  CheckCircle2,
   Trash2,
-  Share2
+  ListTodo,
+  CheckCircle2,
+  ChevronRight
 } from 'lucide-react';
 import { useHubWork } from '../../context/HubWorkContext';
 import { CategoryType, TaskStatus, PriorityLevel } from '../../types/hubwork';
@@ -22,24 +20,34 @@ export const TasksView: React.FC = () => {
     tasks,
     addTask,
     toggleTaskComplete,
-    updateTaskStatus,
+    toggleChecklistItem,
+    addChecklistItem,
     deleteTask,
     convertTaskToEvent,
     openQuickActionWithTab
   } = useHubWork();
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [activeView, setActiveView] = useState<'List' | 'Kanban' | 'Priority'>('List');
+  const [activeView, setActiveView] = useState<'List' | 'Kanban'>('List');
+  const [newSubtaskText, setNewSubtaskText] = useState<{ [taskId: string]: string }>({});
   const [selectedTaskForEvent, setSelectedTaskForEvent] = useState<string | null>(null);
   const [eventScheduleTime, setEventScheduleTime] = useState('14:00');
 
   const categories = ['All', 'Personal', 'Education', 'Work', 'Freelance', 'Medical', 'Finance'];
-  const statuses: TaskStatus[] = ['Inbox', 'Planned', 'In Progress', 'Waiting', 'Completed'];
 
   const filteredTasks = tasks.filter(t => {
     if (activeCategory !== 'All' && t.category !== activeCategory) return false;
     return true;
   });
+
+  const handleAddSubtaskSubmit = (taskId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    const text = newSubtaskText[taskId];
+    if (text) {
+      addChecklistItem(taskId, text);
+      setNewSubtaskText(prev => ({ ...prev, [taskId]: '' }));
+    }
+  };
 
   const handleTaskToEventConversion = (taskId: string) => {
     convertTaskToEvent(taskId, '2026-09-28', eventScheduleTime, 60);
@@ -53,10 +61,10 @@ export const TasksView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <CheckSquare className="w-6 h-6 text-sky-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Tasks Operational Hub</h1>
+            <h1 className="text-2xl font-bold text-slate-100">Tasks & Project Subtasks Hub</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Manage projects, subtasks, dependencies, deadlines, and convert tasks into calendar time blocks.
+            Break down complex projects into subtask checklists, manage priorities, and convert tasks into scheduled calendar blocks.
           </p>
         </div>
 
@@ -97,7 +105,7 @@ export const TasksView: React.FC = () => {
             }`}
           >
             <LayoutList className="w-3.5 h-3.5" />
-            <span>List</span>
+            <span>List & Checklists</span>
           </button>
           <button
             onClick={() => setActiveView('Kanban')}
@@ -106,74 +114,117 @@ export const TasksView: React.FC = () => {
             }`}
           >
             <Kanban className="w-3.5 h-3.5" />
-            <span>Kanban</span>
+            <span>Kanban Board</span>
           </button>
         </div>
       </div>
 
       {/* Main Task View */}
       {activeView === 'List' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           {filteredTasks.length === 0 ? (
             <div className="text-center py-12 text-slate-500 text-xs">No tasks match selected filter.</div>
           ) : (
             filteredTasks.map(task => (
               <div
                 key={task.id}
-                className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all space-y-4"
               >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={task.status === 'Completed'}
-                    onChange={() => toggleTaskComplete(task.id)}
-                    className="w-5 h-5 rounded border-slate-700 text-sky-500 focus:ring-0 bg-slate-900 mt-0.5 cursor-pointer"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className={`font-semibold text-sm ${task.status === 'Completed' ? 'line-through text-slate-500' : 'text-slate-100'}`}>
-                        {task.title}
-                      </h3>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        task.priority === 'Critical' ? 'bg-rose-500/20 text-rose-400' :
-                        task.priority === 'High' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'
-                      }`}>
-                        {task.priority}
-                      </span>
-                    </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={task.status === 'Completed'}
+                      onChange={() => toggleTaskComplete(task.id)}
+                      className="w-5 h-5 rounded border-slate-700 text-sky-500 focus:ring-0 bg-slate-900 mt-0.5 cursor-pointer"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className={`font-bold text-base ${task.status === 'Completed' ? 'line-through text-slate-500' : 'text-slate-100'}`}>
+                          {task.title}
+                        </h3>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          task.priority === 'Critical' ? 'bg-rose-500/20 text-rose-400' :
+                          task.priority === 'High' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'
+                        }`}>
+                          {task.priority}
+                        </span>
+                      </div>
 
-                    {task.description && (
-                      <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                      {task.description && (
+                        <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-400 font-medium">
+                        <span>🏷 {task.category}</span>
+                        <span>📅 Due {task.dueDate}</span>
+                        <span>📊 Progress: {task.completionPercent}%</span>
+                        {task.linkedEventId && (
+                          <span className="text-indigo-400 font-bold">📅 Calendar Block Sync</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end md:self-center">
+                    {!task.linkedEventId && (
+                      <button
+                        onClick={() => setSelectedTaskForEvent(task.id)}
+                        className="px-3 py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-400 text-xs font-semibold border border-indigo-500/30 transition-all flex items-center gap-1"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Convert to Event</span>
+                      </button>
                     )}
 
-                    <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-500 font-medium">
-                      <span>🏷 {task.category}</span>
-                      <span>📅 Due {task.dueDate}</span>
-                      {task.linkedEventId && (
-                        <span className="text-indigo-400 font-bold">📅 Calendar Event Linked</span>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                      title="Delete Task"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 self-end md:self-center">
-                  {!task.linkedEventId && (
-                    <button
-                      onClick={() => setSelectedTaskForEvent(task.id)}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-400 text-xs font-semibold border border-indigo-500/30 transition-all flex items-center gap-1"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Convert to Event</span>
-                    </button>
-                  )}
+                {/* Subtask Checklist Section */}
+                <div className="pt-3 border-t border-slate-800/80 pl-8 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                    <span className="font-semibold flex items-center gap-1.5">
+                      <ListTodo className="w-3.5 h-3.5 text-sky-400" /> Subtask Checklist ({task.checklist?.length || 0})
+                    </span>
+                  </div>
 
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                    title="Delete Task"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {task.checklist && task.checklist.map(item => (
+                    <div key={item.id} className="flex items-center gap-2.5 text-xs text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={item.completed}
+                        onChange={() => toggleChecklistItem(task.id, item.id)}
+                        className="w-4 h-4 rounded border-slate-700 text-sky-500 focus:ring-0 bg-slate-900 cursor-pointer"
+                      />
+                      <span className={item.completed ? 'line-through text-slate-500' : 'text-slate-200'}>
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Add Subtask Input */}
+                  <form onSubmit={e => handleAddSubtaskSubmit(task.id, e)} className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="+ Add subtask item..."
+                      value={newSubtaskText[task.id] || ''}
+                      onChange={e => setNewSubtaskText({ ...newSubtaskText, [task.id]: e.target.value })}
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
+                    >
+                      Add
+                    </button>
+                  </form>
                 </div>
               </div>
             ))
@@ -194,7 +245,7 @@ export const TasksView: React.FC = () => {
 
                 <div className="space-y-2.5">
                   {columnTasks.map(task => (
-                    <div key={task.id} className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                    <div key={task.id} className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
                       <p className={`text-xs font-semibold ${task.status === 'Completed' ? 'line-through text-slate-500' : 'text-slate-200'}`}>
                         {task.title}
                       </p>

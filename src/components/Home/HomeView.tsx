@@ -6,18 +6,13 @@ import {
   Wallet,
   Heart,
   Clock,
-  ArrowRight,
   ChevronRight,
   MapPin,
   Navigation,
-  Droplet,
-  Moon,
-  Dumbbell,
-  Utensils,
-  BookOpen,
   AlertCircle,
-  TrendingUp,
-  Award
+  Download,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { useHubWork } from '../../context/HubWorkContext';
 
@@ -31,16 +26,17 @@ export const HomeView: React.FC = () => {
     bills,
     sleep,
     hydration,
-    meals,
-    workouts,
     dailyPlan,
     smartAlerts,
     taskCompletionPercent,
     healthScore,
+    scheduleConflictsCount,
     openQuickActionWithTab,
     toggleTaskComplete,
     togglePlanBlockComplete,
     addWaterGlass,
+    autoResolveScheduleConflicts,
+    exportDailyReport,
     setActiveTab
   } = useHubWork();
 
@@ -72,8 +68,16 @@ export const HomeView: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Actions Bar */}
+          {/* Quick Actions & Report Download */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={exportDailyReport}
+              className="flex items-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm"
+              title="Download text summary of today's plan"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Report</span>
+            </button>
             <button
               onClick={() => openQuickActionWithTab('task')}
               className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3.5 py-2 rounded-xl border border-slate-700/80 transition-all shadow-sm"
@@ -95,20 +99,6 @@ export const HomeView: React.FC = () => {
               <Plus className="w-3.5 h-3.5 text-emerald-400" />
               <span>+ Expense</span>
             </button>
-            <button
-              onClick={() => openQuickActionWithTab('meal')}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3.5 py-2 rounded-xl border border-slate-700/80 transition-all shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-400" />
-              <span>+ Meal</span>
-            </button>
-            <button
-              onClick={() => openQuickActionWithTab('workout')}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3.5 py-2 rounded-xl border border-slate-700/80 transition-all shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5 text-purple-400" />
-              <span>+ Workout</span>
-            </button>
           </div>
         </div>
 
@@ -128,38 +118,23 @@ export const HomeView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. SMART ALERTS BANNER */}
-      {smartAlerts.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-400" />
-              <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Smart Engine Alerts</h3>
+      {/* 2. SCHEDULE CONFLICT AUTO-RESOLVE BANNER */}
+      {scheduleConflictsCount > 0 && (
+        <div className="bg-rose-950/40 border border-rose-800/60 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-6 h-6 text-rose-400 shrink-0" />
+            <div>
+              <h3 className="font-bold text-slate-100 text-sm">Schedule Overlap Detected in Daily Plan</h3>
+              <p className="text-xs text-slate-400">Two events are overlapping at 09:15 AM. Auto-resolve to shift one block to open slot.</p>
             </div>
-            <span className="text-xs text-slate-400 font-medium">{smartAlerts.length} Active Notifications</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {smartAlerts.slice(0, 3).map(alert => (
-              <div
-                key={alert.id}
-                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1.5 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                    alert.severity === 'critical' ? 'bg-rose-500/20 text-rose-400' :
-                    alert.severity === 'warning' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-sky-500/20 text-sky-400'
-                  }`}>
-                    {alert.module}
-                  </span>
-                  <span className="text-[10px] text-slate-500">{alert.createdAt}</span>
-                </div>
-                <h4 className="font-semibold text-slate-200 leading-snug">{alert.title}</h4>
-                <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{alert.description}</p>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={autoResolveScheduleConflicts}
+            className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs shadow-lg shadow-rose-500/20 transition-all self-start sm:self-auto"
+          >
+            Auto-Resolve Conflict
+          </button>
         </div>
       )}
 
@@ -265,7 +240,7 @@ export const HomeView: React.FC = () => {
                       <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/50 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Navigation className="w-3.5 h-3.5 text-sky-400" />
-                          <span className="text-indigo-200 font-medium text-[11px]">Leave by {nextEvent.recommendedLeaveTime} ({nextEvent.transportMode})</span>
+                          <span className="text-indigo-200 font-medium text-[11px]">Leave by {nextEvent.recommendedLeaveTime} ({nextEvent.selectedTransportMode || 'Driving'})</span>
                         </div>
                         <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
                           {nextEvent.arrivalStatus}
@@ -291,7 +266,6 @@ export const HomeView: React.FC = () => {
         {/* FINANCE & HEALTH SNAPSHOT CARD */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
-            {/* Finance Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
@@ -320,7 +294,6 @@ export const HomeView: React.FC = () => {
               </div>
             </div>
 
-            {/* Health Snapshot Header */}
             <div className="pt-3 border-t border-slate-800/80">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -333,10 +306,7 @@ export const HomeView: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
                   <span className="text-slate-400 text-[11px]">Hydration</span>
-                  <button
-                    onClick={addWaterGlass}
-                    className="font-bold text-sky-400 hover:text-sky-300"
-                  >
+                  <button onClick={addWaterGlass} className="font-bold text-sky-400 hover:text-sky-300">
                     💧 {hydration.consumedLiters}L / {hydration.targetLiters}L
                   </button>
                 </div>
@@ -355,7 +325,7 @@ export const HomeView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. DAILY OPERATIONAL PLAN TIMELINE (Section 8 of prompt structure) */}
+      {/* 4. DAILY OPERATIONAL PLAN TIMELINE */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
@@ -375,10 +345,11 @@ export const HomeView: React.FC = () => {
 
         <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
           {dailyPlan.map((block) => (
-            <div key={block.id} className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all">
-              {/* Timeline Marker */}
+            <div key={block.id} className={`relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-950/60 border hover:border-slate-700 transition-all ${
+              block.hasConflict ? 'border-rose-500/60 bg-rose-950/20' : 'border-slate-800/80'
+            }`}>
               <div className={`absolute -left-[23px] top-5 w-3 h-3 rounded-full border-2 border-slate-900 ${
-                block.completed ? 'bg-emerald-500' : 'bg-sky-500'
+                block.hasConflict ? 'bg-rose-500' : block.completed ? 'bg-emerald-500' : 'bg-sky-500'
               }`} />
 
               <div className="flex items-start sm:items-center gap-3">
@@ -401,16 +372,16 @@ export const HomeView: React.FC = () => {
                     }`}>
                       {block.period}
                     </span>
+                    {block.hasConflict && (
+                      <span className="px-2 py-0.5 rounded bg-rose-500 text-white font-extrabold text-[9px] uppercase">
+                        Conflict
+                      </span>
+                    )}
                   </div>
                   <h4 className={`text-sm font-semibold mt-1 ${block.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
                     {block.title}
                   </h4>
-                  {block.location && (
-                    <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-rose-400" />
-                      <span>{block.location}</span>
-                    </p>
-                  )}
+                  {block.subtitle && <p className="text-[11px] text-slate-400">{block.subtitle}</p>}
                 </div>
               </div>
 
@@ -425,47 +396,6 @@ export const HomeView: React.FC = () => {
               </span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 5. DAILY SUMMARY & GOALS ACHIEVED (Section 10 of prompt structure) */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-400" />
-            <h3 className="font-bold text-slate-100 text-base">Daily Summary & Completion Metrics</h3>
-          </div>
-          <span className="text-xs text-slate-400 font-medium">Tomorrow Preview Ready</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center space-y-1">
-            <span className="text-xs text-slate-400">Tasks Completed</span>
-            <p className="text-xl font-extrabold text-sky-400">
-              {tasks.filter(t => t.status === 'Completed').length} / {tasks.length}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center space-y-1">
-            <span className="text-xs text-slate-400">Events Attended</span>
-            <p className="text-xl font-extrabold text-indigo-400">
-              {events.length}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center space-y-1">
-            <span className="text-xs text-slate-400">Money Spent Today</span>
-            <p className="text-xl font-extrabold text-rose-400">
-              ${monthlyExpenses.toFixed(0)}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center space-y-1">
-            <span className="text-xs text-slate-400">Health Index</span>
-            <p className="text-xl font-extrabold text-emerald-400">
-              {healthScore}%
-            </p>
-          </div>
         </div>
       </div>
     </div>

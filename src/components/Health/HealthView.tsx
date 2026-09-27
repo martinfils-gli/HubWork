@@ -9,8 +9,8 @@ import {
   Plus,
   CheckCircle2,
   Activity,
-  Award,
-  Sparkles
+  Sparkles,
+  Flame
 } from 'lucide-react';
 import { useHubWork } from '../../context/HubWorkContext';
 
@@ -21,25 +21,28 @@ export const HealthView: React.FC = () => {
     hydration,
     meals,
     workouts,
-    medicalRecords,
-    symptoms,
     spiritual,
     healthScore,
+    totalCaloriesLogged,
+    totalProteinLogged,
+    totalCarbsLogged,
+    totalFatsLogged,
     addWaterGlass,
     toggleWorkoutComplete,
+    toggleWorkoutSetComplete,
     togglePrayerComplete,
     toggleBibleReading,
-    addSymptom,
+    addGratitudeNote,
     openQuickActionWithTab
   } = useHubWork();
 
-  const [symptomInput, setSymptomInput] = useState('');
+  const [gratitudeInput, setGratitudeInput] = useState('');
 
-  const handleAddSymptom = (e: React.FormEvent) => {
+  const handleAddGratitude = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!symptomInput) return;
-    addSymptom({ symptom: symptomInput, severity: 'Mild' });
-    setSymptomInput('');
+    if (!gratitudeInput) return;
+    addGratitudeNote(gratitudeInput);
+    setGratitudeInput('');
   };
 
   return (
@@ -49,10 +52,10 @@ export const HealthView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <Heart className="w-6 h-6 text-rose-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Health & Spiritual Operating Module</h1>
+            <h1 className="text-2xl font-bold text-slate-100">Health, Fitness & Spiritual Module</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Vitals, hydration, sleep quality, nutrition planner, workout builder, medical history, and spiritual routines.
+            Macro nutrition tracking, workout set/rep logger, vitals, hydration, and spiritual reflection routines.
           </p>
         </div>
 
@@ -74,153 +77,128 @@ export const HealthView: React.FC = () => {
         </div>
       </div>
 
-      {/* 1. HEALTH SCORE & VITALS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2 text-center md:text-left">
-          <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Overall Health Score</span>
-          <h2 className="text-3xl font-extrabold text-sky-400">{healthScore} / 100</h2>
-          <p className="text-[11px] text-emerald-400 font-medium">Optimal energy balance</p>
+      {/* 1. NUTRITION MACROS BREAKDOWN CARD */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
+            <Flame className="w-5 h-5 text-amber-400" />
+            <span>Daily Nutrition & Macro Progress</span>
+          </h3>
+          <span className="text-xs text-amber-400 font-bold">{totalCaloriesLogged} / 2200 kcal Goal</span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 uppercase font-bold">Hydration Target</span>
-            <button
-              onClick={addWaterGlass}
-              className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 text-[10px] font-bold"
-            >
-              +1 Glass
-            </button>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-semibold">Protein</span>
+              <span className="text-sky-400 font-bold">{totalProteinLogged}g / 140g</span>
+            </div>
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-sky-500 h-full rounded-full" style={{ width: `${Math.min(100, (totalProteinLogged / 140) * 100)}%` }} />
+            </div>
           </div>
-          <h2 className="text-2xl font-extrabold text-sky-400">{hydration.consumedLiters}L / {hydration.targetLiters}L</h2>
-          <p className="text-[11px] text-slate-400">{hydration.glassCount} glasses consumed today</p>
-        </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
-          <span className="text-xs text-slate-400 uppercase font-bold">Sleep Quality</span>
-          <h2 className="text-2xl font-extrabold text-indigo-400">{sleep.durationHours}h {sleep.durationMinutes}m</h2>
-          <p className="text-[11px] text-slate-400">{sleep.qualityPercent}% score • Bedtime {sleep.bedtime}</p>
-        </div>
+          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-semibold">Carbohydrates</span>
+              <span className="text-amber-400 font-bold">{totalCarbsLogged}g / 220g</span>
+            </div>
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-amber-500 h-full rounded-full" style={{ width: `${Math.min(100, (totalCarbsLogged / 220) * 100)}%` }} />
+            </div>
+          </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-2">
-          <span className="text-xs text-slate-400 uppercase font-bold">Vitals Check</span>
-          <h2 className="text-2xl font-extrabold text-rose-400">{vitals.heartRateBpm} BPM</h2>
-          <p className="text-[11px] text-slate-400">BP: {vitals.bloodPressureSystolic}/{vitals.bloodPressureDiastolic} mmHg</p>
+          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-semibold">Healthy Fats</span>
+              <span className="text-purple-400 font-bold">{totalFatsLogged}g / 65g</span>
+            </div>
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-purple-500 h-full rounded-full" style={{ width: `${Math.min(100, (totalFatsLogged / 65) * 100)}%` }} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 2. NUTRITION & WORKOUT BUILDER */}
+      {/* 2. WORKOUT BUILDER & INTERACTIVE SET/REP TRACKER */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Nutrition Log */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
-            <Utensils className="w-5 h-5 text-amber-400" />
-            <span>Today's Nutrition Log</span>
-          </h3>
-
-          <div className="space-y-3">
-            {meals.map(m => (
-              <div key={m.id} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs">
-                <div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 uppercase">
-                    {m.type}
-                  </span>
-                  <h4 className="font-semibold text-slate-200 text-sm mt-1">{m.title}</h4>
-                  <p className="text-[10px] text-slate-400">Logged at {m.timeLogged}</p>
-                </div>
-                <span className="font-extrabold text-amber-400 text-sm">{m.calories} kcal</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Workouts */}
+        {/* Workouts with Sets/Reps */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
             <Dumbbell className="w-5 h-5 text-purple-400" />
-            <span>Exercise & Recovery</span>
+            <span>Workouts & Set/Rep Tracker</span>
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {workouts.map(w => (
-              <div key={w.id} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={w.completed}
-                    onChange={() => toggleWorkoutComplete(w.id)}
-                    className="w-4 h-4 rounded border-slate-700 text-purple-500 focus:ring-0 bg-slate-900 cursor-pointer"
-                  />
+              <div key={w.id} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h4 className={`font-semibold text-sm ${w.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                    <h4 className={`font-bold text-sm ${w.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>
                       {w.title}
                     </h4>
-                    <span className="text-[10px] text-slate-400">{w.durationMinutes} mins • ~{w.caloriesBurned} kcal burned</span>
+                    <span className="text-[10px] text-slate-400">{w.category} • {w.durationMinutes} mins • ~{w.caloriesBurned} kcal</span>
                   </div>
+                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${w.completed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                    {w.completed ? 'Completed' : 'In Progress'}
+                  </span>
                 </div>
 
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400">
-                  {w.category}
-                </span>
+                {/* Individual Sets */}
+                {w.sets && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Set Counter:</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {w.sets.map(s => (
+                        <button
+                          key={s.setNumber}
+                          onClick={() => toggleWorkoutSetComplete(w.id, s.setNumber)}
+                          className={`p-2 rounded-xl text-center text-xs font-semibold transition-all border ${
+                            s.completed
+                              ? 'bg-purple-500/20 border-purple-500 text-purple-300'
+                              : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          Set {s.setNumber}: {s.reps} reps {s.weightKg ? `@ ${s.weightKg}kg` : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* 3. SPIRITUAL WELLBEING & PRAYER TRACKER */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        {/* Spiritual Wellbeing & Gratitude Journal */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+          <h3 className="font-bold text-slate-200 text-base flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-teal-400" />
-            <h3 className="font-bold text-slate-100 text-base">Spiritual & Mindful Practices</h3>
-          </div>
-          <span className="text-xs text-teal-400 font-bold">
-            Prayers: {spiritual.prayersCompletedToday} / {spiritual.targetPrayers}
-          </span>
-        </div>
+            <span>Spiritual & Gratitude Journal</span>
+          </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Prayers List */}
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
-            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Daily Prayers</h4>
-            <div className="space-y-2">
-              {spiritual.prayerList.map(p => (
-                <div key={p.id} className="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-900/60">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={p.completed}
-                      onChange={() => togglePrayerComplete(p.id)}
-                      className="w-4 h-4 rounded border-slate-700 text-teal-500 focus:ring-0 bg-slate-900 cursor-pointer"
-                    />
-                    <span className={p.completed ? 'line-through text-slate-500' : 'text-slate-200'}>{p.title}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500">{p.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="space-y-3">
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Gratitude Notes</h4>
+              <ul className="space-y-1 text-xs text-slate-300 list-disc list-inside">
+                {spiritual.gratitudeNotes.map((note, idx) => (
+                  <li key={idx}>{note}</li>
+                ))}
+              </ul>
 
-          {/* Scripture & Journaling */}
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Bible Reading</h4>
-              <button
-                onClick={toggleBibleReading}
-                className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
-                  spiritual.bibleReadingCompleted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'
-                }`}
-              >
-                {spiritual.bibleReadingCompleted ? 'Completed' : 'Mark Done'}
-              </button>
+              <form onSubmit={handleAddGratitude} className="flex gap-2 pt-2">
+                <input
+                  type="text"
+                  placeholder="+ Add gratitude note..."
+                  value={gratitudeInput}
+                  onChange={e => setGratitudeInput(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-teal-500"
+                />
+                <button type="submit" className="px-3 py-1.5 rounded-xl bg-teal-500 text-slate-950 font-bold text-xs">
+                  Add
+                </button>
+              </form>
             </div>
-            <p className="text-xs text-slate-300 font-medium">{spiritual.biblePassageToday}</p>
-            {spiritual.journalEntry && (
-              <div className="pt-2 border-t border-slate-800 text-xs text-slate-400 italic">
-                "{spiritual.journalEntry}"
-              </div>
-            )}
           </div>
         </div>
       </div>

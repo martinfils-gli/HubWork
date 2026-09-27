@@ -3,6 +3,12 @@ export type CategoryType = 'Personal' | 'Education' | 'Work' | 'Freelance' | 'Me
 export type TaskStatus = 'Inbox' | 'Planned' | 'In Progress' | 'Waiting' | 'Blocked' | 'Completed' | 'Cancelled' | 'Archived';
 export type PriorityLevel = 'Critical' | 'High' | 'Medium' | 'Low';
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -13,7 +19,7 @@ export interface Task {
   status: TaskStatus;
   priority: PriorityLevel;
   startDate?: string;
-  dueDate: string; // ISO Date YYYY-MM-DD or string
+  dueDate: string; // ISO Date YYYY-MM-DD
   startTime?: string; // HH:mm
   endTime?: string; // HH:mm
   estimatedDurationMinutes?: number;
@@ -22,7 +28,7 @@ export interface Task {
   assignee?: string;
   collaborators?: string[];
   tags?: string[];
-  checklist?: { id: string; text: string; completed: boolean }[];
+  checklist?: ChecklistItem[];
   dependencies?: string[]; // Task IDs required before this task
   recurrence?: 'Daily' | 'Weekly' | 'Monthly' | 'None';
   linkedEventId?: string; // Connection to Events
@@ -34,6 +40,14 @@ export interface Task {
 }
 
 export type TransportMode = 'Walking' | 'Bike' | 'Scooter' | 'Bus' | 'Tram' | 'Metro' | 'Taxi' | 'Ride-hailing' | 'Driving' | 'Public Transport';
+
+export interface RouteOption {
+  mode: TransportMode;
+  distanceKm: number;
+  travelTimeMinutes: number;
+  recommendedLeaveTime: string; // HH:mm
+  carbonKg?: number;
+}
 
 export interface EventItem {
   id: string;
@@ -52,11 +66,10 @@ export interface EventItem {
   meetingLink?: string;
   notes?: string;
   linkedTaskId?: string;
-  // Punctuality & Travel Engine
+  // Punctuality & Route Options
   originLocation?: string;
-  transportMode?: TransportMode;
-  distanceKm?: number;
-  estimatedTravelTimeMinutes?: number;
+  selectedTransportMode?: TransportMode;
+  routes?: RouteOption[];
   preparationTimeMinutes?: number;
   bufferTimeMinutes?: number;
   recommendedLeaveTime?: string; // HH:mm
@@ -173,12 +186,20 @@ export interface Meal {
   timeLogged: string;
 }
 
+export interface ExerciseSet {
+  setNumber: number;
+  reps: number;
+  weightKg?: number;
+  completed: boolean;
+}
+
 export interface ExerciseWorkout {
   id: string;
   title: string;
   category: 'Walking' | 'Running' | 'Cycling' | 'Strength' | 'Cardio' | 'Stretching' | 'Mobility';
   durationMinutes: number;
   caloriesBurned: number;
+  sets?: ExerciseSet[];
   setsRepsInfo?: string;
   completed: boolean;
   scheduledTime?: string;
@@ -224,6 +245,7 @@ export interface DailyPlanBlock {
   completed: boolean;
   location?: string;
   subtitle?: string;
+  hasConflict?: boolean;
 }
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
@@ -244,7 +266,7 @@ export interface UserProfile {
   location: string;
   weatherTempC: number;
   weatherCondition: string;
-  currentDate: string; // e.g. "Saturday, 26 September 2026"
+  currentDate: string;
   currentTime: string;
   dayProgressPercent: number;
   healthScore: number;
